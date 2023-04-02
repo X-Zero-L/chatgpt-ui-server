@@ -12,7 +12,7 @@ class RegistrationView(RegisterView):
         except Setting.DoesNotExist:
             open_registration = True
 
-        if open_registration is False:
+        if not open_registration:
             return Response({'detail': 'Registration is not yet open.'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(data=request.data)
@@ -23,13 +23,12 @@ class RegistrationView(RegisterView):
 
         data['email_verification_required'] = allauth_account_settings.EMAIL_VERIFICATION
 
-        if data:
-            response = Response(
+        return (
+            Response(
                 data,
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
-        else:
-            response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
-
-        return response
+            if data
+            else Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
+        )
