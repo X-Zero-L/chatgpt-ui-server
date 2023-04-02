@@ -56,8 +56,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        conversationId = self.request.query_params.get('conversationId')
-        if conversationId:
+        if conversationId := self.request.query_params.get('conversationId'):
             queryset = queryset.filter(conversation_id=conversationId).order_by('created_at')
         return queryset
 
@@ -273,10 +272,10 @@ def build_messages(model, conversation_obj, web_search_params):
 
     messages = []
 
-    while current_token_count < max_token_count and len(ordered_messages_list) > 0:
+    while current_token_count < max_token_count and ordered_messages_list:
         message = ordered_messages_list.pop()
         role = "assistant" if message.is_bot else "user"
-        if web_search_params is not None and len(messages) == 0:
+        if web_search_params is not None and not messages:
             search_results = web_search(SearchRequest(message.message, ua=web_search_params['ua']), num_results=5)
             message_content = compile_prompt(search_results, message.message, default_prompt=web_search_params['default_prompt'])
         else:
@@ -284,7 +283,7 @@ def build_messages(model, conversation_obj, web_search_params):
         new_message = {"role": role, "content": message_content}
         new_token_count = num_tokens_from_messages(system_messages + messages + [new_message])
         if new_token_count > max_token_count:
-            if len(messages) > 0:
+            if messages:
                 break
             raise ValueError(
                 f"Prompt is too long. Max token count is {max_token_count}, but prompt is {new_token_count} tokens long.")
@@ -299,8 +298,7 @@ def get_current_model(model="gpt-3.5-turbo"):
 
 
 def get_openai_api_key():
-    row = Setting.objects.filter(name='openai_api_key').first()
-    if row:
+    if row := Setting.objects.filter(name='openai_api_key').first():
         return row.value
     return None
 
@@ -341,7 +339,6 @@ def get_openai(openai_api_key = None):
     if openai_api_key is None:
         openai_api_key = get_openai_api_key()
     openai.api_key = openai_api_key
-    proxy = os.getenv('OPENAI_API_PROXY')
-    if proxy:
+    if proxy := os.getenv('OPENAI_API_PROXY'):
         openai.api_base = proxy
     return openai

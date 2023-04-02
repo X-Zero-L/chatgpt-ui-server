@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+
 import os
 from datetime import timedelta
 
@@ -37,10 +38,7 @@ ALLOWED_HOSTS = ['*']
 app_domains = os.getenv('APP_DOMAIN', 'localhost:9000').split(',')
 CSRF_TRUSTED_ORIGINS = []
 for app_domain in app_domains:
-    CSRF_TRUSTED_ORIGINS.append('http://' + app_domain)
-    CSRF_TRUSTED_ORIGINS.append('https://' + app_domain)
-
-
+    CSRF_TRUSTED_ORIGINS.extend((f'http://{app_domain}', f'https://{app_domain}'))
 # Application definition
 
 INSTALLED_APPS = [

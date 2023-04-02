@@ -13,23 +13,25 @@ def compile_prompt(results: List[SearchResult], query: str, default_prompt: str)
     formatted_results = format_web_results(results)
     current_date = datetime.now().strftime("%m/%d/%Y")
     print(default_prompt)
-    prompt = replace_variables(default_prompt, {
-        '[web_results]': formatted_results,
-        '[query]': remove_commands(query),
-        '[current_date]': current_date
-    })
-    return prompt
+    return replace_variables(
+        default_prompt,
+        {
+            '[web_results]': formatted_results,
+            '[query]': remove_commands(query),
+            '[current_date]': current_date,
+        },
+    )
 
 
 def format_web_results(results: List[SearchResult]) -> str:
-    if len(results) == 0:
-        return "No results found.\n"
-    formatted_results = ""
-    counter = 1
-    for result in results:
-        formatted_results += f"[{counter}] \"{result.body}\"\nURL: {result.url}\n\n"
-        counter += 1
-    return formatted_results
+    return (
+        "".join(
+            f'[{counter}] \"{result.body}\"\nURL: {result.url}\n\n'
+            for counter, result in enumerate(results, start=1)
+        )
+        if results
+        else "No results found.\n"
+    )
 
 
 def replace_variables(prompt: str, variables: dict) -> str:
